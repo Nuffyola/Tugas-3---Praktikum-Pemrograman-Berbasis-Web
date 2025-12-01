@@ -1,0 +1,23 @@
+<!-- Template: App Modal Component -->
+<!-- ID: tpl-app-modal -->
+<template id="tpl-app-modal">
+    <div class="modal-overlay" v-if="show" @click.self="handleClose">
+        <div class="modal-content" :style="{ maxWidth: maxWidth }">
+            <div class="modal-header">
+                <h3>{{ title }}</h3>
+                <button class="modal-close" @click="handleClose" title="Tutup">&times;</button>
+            </div>
+            <div class="modal-body">
+                <slot></slot>
+            </div>
+            <div class="modal-footer" v-if="showFooter">
+                <slot name="footer">
+                    <button class="btn btn-secondary" @click="handleClose">Batal</button>
+                    <button class="btn btn-primary" @click="handleConfirm" :disabled="confirmDisabled">
+                        {{ confirmText }}
+                    </button>
+                </slot>
+            </div>
+        </div>
+    </div>
+</template>

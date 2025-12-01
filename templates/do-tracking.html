@@ -1,0 +1,114 @@
+<!-- Template: DO Tracking Component -->
+<!-- ID: tpl-do-tracking -->
+<template id="tpl-do-tracking">
+    <div class="tracking-page">
+        <!-- Search Section -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h2>🔍 Cari Delivery Order</h2>
+            </div>
+            <div class="card-body">
+                <div class="search-box">
+                    <input type="text" 
+                           v-model="searchQuery" 
+                           placeholder="Masukkan No. DO atau NIM (tekan Enter untuk cari, Esc untuk reset)"
+                           @keydown.enter="performSearch"
+                           @keydown.esc="resetSearch"
+                           class="form-control">
+                    <button class="btn btn-primary" @click="performSearch">
+                        🔍 Cari
+                    </button>
+                    <button class="btn btn-secondary" @click="resetSearch">
+                        🔄 Reset
+                    </button>
+                </div>
+                <p class="text-muted" v-if="!searchQuery">
+                    <small>Tip: Tekan <strong>Enter</strong> untuk mencari, <strong>Esc</strong> untuk reset</small>
+                </p>
+            </div>
+        </div>
+
+        <!-- Search Results / All Tracking List -->
+        <div v-if="displayedTrackingList.length > 0">
+            <div class="tracking-card" v-for="track in displayedTrackingList" :key="track.noDO">
+                <!-- Tracking Header -->
+                <div class="tracking-header">
+                    <div>
+                        <h3>📦 {{ track.noDO }}</h3>
+                        <span>{{ track.nama }} ({{ track.nim }})</span>
+                    </div>
+                    <div>
+                        <span :class="['status-badge', getStatusClass(track.status)]">
+                            {{ track.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Tracking Info -->
+                <div class="tracking-info">
+                    <div class="tracking-info-item">
+                        <span class="label">Ekspedisi</span>
+                        <span class="value">{{ getEkspedisiName(track.ekspedisi) }}</span>
+                    </div>
+                    <div class="tracking-info-item">
+                        <span class="label">Tanggal Kirim</span>
+                        <span class="value">{{ formatDate(track.tanggalKirim) }}</span>
+                    </div>
+                    <div class="tracking-info-item">
+                        <span class="label">Paket</span>
+                        <span class="value">{{ track.paket }}</span>
+                    </div>
+                    <div class="tracking-info-item">
+                        <span class="label">Total Harga</span>
+                        <span class="value">{{ formatRupiah(track.total) }}</span>
+                    </div>
+                </div>
+
+                <!-- Package Details -->
+                <div class="tracking-info" v-if="getPackageDetails(track.paket)">
+                    <div class="package-details" style="width: 100%;">
+                        <h4>📚 Isi Paket: {{ getPackageDetails(track.paket).nama }}</h4>
+                        <ul>
+                            <li v-for="item in getPackageDetails(track.paket).isi" :key="item">
+                                {{ item }} - {{ getStockTitle(item) }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tracking Timeline -->
+                <div class="tracking-timeline">
+                    <div class="timeline-title">📍 Riwayat Perjalanan</div>
+                    <div class="timeline">
+                        <div class="timeline-item" 
+                             v-for="(journey, jIndex) in track.perjalanan" 
+                             :key="jIndex"
+                             :class="{ 'active': jIndex === track.perjalanan.length - 1 }">
+                            <div class="timeline-time">{{ journey.waktu }}</div>
+                            <div class="timeline-desc">{{ journey.keterangan }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Add Progress Form -->
+                    <div class="progress-form">
+                        <input type="text" 
+                               v-model="progressInputs[track.noDO]" 
+                               placeholder="Tambah keterangan progress baru..."
+                               @keydown.enter="addProgress(track)">
+                        <button class="btn btn-success btn-sm" @click="addProgress(track)">
+                            ➕ Tambah Progress
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" v-else>
+            <div class="icon">🔍</div>
+            <h3 v-if="searchQuery">Tidak ditemukan hasil untuk "{{ searchQuery }}"</h3>
+            <h3 v-else>Belum ada data tracking</h3>
+            <p>Coba cari dengan No. DO atau NIM yang berbeda</p>
+        </div>
+    </div>
+</template>

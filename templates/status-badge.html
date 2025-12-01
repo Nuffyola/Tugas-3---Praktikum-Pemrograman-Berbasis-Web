@@ -1,0 +1,11 @@
+<!-- Template: Status Badge Component -->
+<!-- ID: tpl-status-badge -->
+<template id="tpl-status-badge">
+    <div class="tooltip-container">
+        <span :class="['status-badge', statusClass]">
+            <span class="status-icon" v-html="statusIcon"></span>
+            <span class="status-text">{{ statusLabel }}</span>
+        </span>
+        <div class="tooltip-text" v-if="tooltip" v-html="tooltip"></div>
+    </div>
+</template>

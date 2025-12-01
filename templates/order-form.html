@@ -1,0 +1,187 @@
+<!-- Template: Order Form Component -->
+<!-- ID: tpl-order-form -->
+<template id="tpl-order-form">
+    <div class="order-form-page">
+        <div class="card">
+            <div class="card-header">
+                <h2>📝 Input Delivery Order Baru</h2>
+            </div>
+            <div class="card-body">
+                <form @submit.prevent="submitOrder" @keydown.enter.prevent="submitOrder">
+                    <div class="form-row">
+                        <!-- No DO (Auto Generated) -->
+                        <div class="form-group">
+                            <label>No. Delivery Order</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   :value="generatedDONumber" 
+                                   disabled 
+                                   style="background-color: #e9ecef;">
+                            <small class="text-muted">Nomor DO digenerate otomatis</small>
+                        </div>
+
+                        <!-- Tanggal Kirim -->
+                        <div class="form-group">
+                            <label class="required">Tanggal Kirim</label>
+                            <input type="date" 
+                                   class="form-control"
+                                   :class="{'is-invalid': errors.tanggalKirim}"
+                                   v-model="formData.tanggalKirim">
+                            <div class="invalid-feedback" v-if="errors.tanggalKirim">
+                                {{ errors.tanggalKirim }}
+                            </div>
+                            <small class="text-muted">Format: {{ formData.tanggalKirim ? formatDateDisplay(formData.tanggalKirim) : '-' }}</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- NIM -->
+                        <div class="form-group">
+                            <label class="required">NIM Mahasiswa</label>
+                            <input type="text" 
+                                   class="form-control"
+                                   :class="{'is-invalid': errors.nim}"
+                                   v-model="formData.nim"
+                                   placeholder="Masukkan NIM"
+                                   maxlength="15">
+                            <div class="invalid-feedback" v-if="errors.nim">
+                                {{ errors.nim }}
+                            </div>
+                        </div>
+
+                        <!-- Nama -->
+                        <div class="form-group">
+                            <label class="required">Nama Mahasiswa</label>
+                            <input type="text" 
+                                   class="form-control"
+                                   :class="{'is-invalid': errors.nama}"
+                                   v-model="formData.nama"
+                                   placeholder="Masukkan nama lengkap">
+                            <div class="invalid-feedback" v-if="errors.nama">
+                                {{ errors.nama }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <!-- Ekspedisi -->
+                        <div class="form-group">
+                            <label class="required">Ekspedisi</label>
+                            <select class="form-control"
+                                    :class="{'is-invalid': errors.ekspedisi}"
+                                    v-model="formData.ekspedisi">
+                                <option value="">Pilih Ekspedisi</option>
+                                <option v-for="eks in pengirimanList" :key="eks.kode" :value="eks.kode">
+                                    JNE {{ eks.nama }}
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" v-if="errors.ekspedisi">
+                                {{ errors.ekspedisi }}
+                            </div>
+                        </div>
+
+                        <!-- Paket -->
+                        <div class="form-group">
+                            <label class="required">Paket Bahan Ajar</label>
+                            <select class="form-control"
+                                    :class="{'is-invalid': errors.paket}"
+                                    v-model="formData.paket">
+                                <option value="">Pilih Paket</option>
+                                <option v-for="pkg in paketList" :key="pkg.kode" :value="pkg.kode">
+                                    {{ pkg.kode }} - {{ pkg.nama }}
+                                </option>
+                            </select>
+                            <div class="invalid-feedback" v-if="errors.paket">
+                                {{ errors.paket }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Package Details (shown when package selected) -->
+                    <div class="package-details" v-if="selectedPackage">
+                        <h4>📦 Detail Paket: {{ selectedPackage.nama }}</h4>
+                        <ul>
+                            <li v-for="item in selectedPackage.isi" :key="item">
+                                <strong>{{ item }}</strong> - {{ getStockTitle(item) }}
+                            </li>
+                        </ul>
+                        <div class="mt-2">
+                            <strong>Total Harga: {{ formatRupiah(selectedPackage.harga) }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Total Price Display -->
+                    <div class="form-group mt-3" v-if="formData.paket">
+                        <label>Total Harga</label>
+                        <input type="text" 
+                               class="form-control" 
+                               :value="formatRupiah(totalPrice)" 
+                               disabled
+                               style="background-color: #d4edda; font-weight: bold; font-size: 1.2rem;">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-group mt-3">
+                        <button type="submit" class="btn btn-success btn-lg" :disabled="!isFormValid">
+                            ✅ Simpan Delivery Order
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" @click="resetForm">
+                            🔄 Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="card mt-3" v-if="recentOrders.length > 0">
+            <div class="card-header">
+                <h2>📋 Delivery Order Terbaru (Sesi Ini)</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No. DO</th>
+                                <th>NIM</th>
+                                <th>Nama</th>
+                                <th>Paket</th>
+                                <th>Ekspedisi</th>
+                                <th>Tanggal Kirim</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="order in recentOrders" :key="order.noDO">
+                                <td><strong>{{ order.noDO }}</strong></td>
+                                <td>{{ order.nim }}</td>
+                                <td>{{ order.nama }}</td>
+                                <td>{{ order.paket }}</td>
+                                <td>{{ getEkspedisiName(order.ekspedisi) }}</td>
+                                <td>{{ formatDateDisplay(order.tanggalKirim) }}</td>
+                                <td>{{ formatRupiah(order.total) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <app-modal 
+            :show="showSuccessModal"
+            title="✅ Berhasil!"
+            confirm-text="OK"
+            :show-footer="true"
+            max-width="400px"
+            @close="showSuccessModal = false"
+            @confirm="showSuccessModal = false">
+            <div class="text-center">
+                <div style="font-size: 4rem; margin-bottom: 15px;">🎉</div>
+                <h3>Delivery Order Tersimpan!</h3>
+                <p>No. DO: <strong>{{ lastSavedDO }}</strong></p>
+            </div>
+        </app-modal>
+    </div>
+</template>
